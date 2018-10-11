@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>무한 스크롤</title>
+</head>
+<body>
+
+<style>
+    *{
+        margin: 0px;
+        padding: 0px;
+    }
+
+    .container{
+        width:100%;
+        height:100vh;
+        display: flex;
+        justify-content: center;
+        /*align-items: center;*/
+        background-color: lightpink;
+    }
+
+    .box{
+        width:80%;
+        height:1200px;
+        background-color: #c7fff5;
+        overflow: auto;
+    }
+
+    .item{
+        height:200px;
+        box-sizing:border-box;
+        border:1px solid #cc376b;
+        /*margin-bottom: -1px; !*균일한 색상*!*/
+
+    }
+
+    ::-webkit-scrollbar {
+        width: 12px;
+    }
+
+    ::-webkit-scrollbar-track {
+        -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        border-radius: 10px;
+        -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5);
+    }
+
+    .lightbox{
+        position:absolute;
+        width:100%;
+        height:100vh;
+        background-color: grey;
+        z-index: 100; /*앞쪽으로 얼마나 나오는지*/
+        opacity:0.7;
+        display:none;
+    }
+    .spinner{
+        position:absolute;
+        top:50%;
+        left: 50%;
+        margin-left:-50px;
+        margin-top:-100px;
+    }
+
+
+</style>
+
+<div class="lightbox">
+    <img src="spinner.gif" class="spinner"/>
+</div>
+
+<div class="container">
+    <div class="box">
+       <div class="item"><img src="samples/01.jpg"></div>
+       <div class="item"><img src="samples/02.jpg"></div>
+       <div class="item"><img src="samples/03.jpg"></div>
+       <div class="item"><img src="samples/04.jpg"></div>
+       <div class="item"><img src="samples/05.jpg"></div>
+       <div class="item"><img src="samples/11.jpg"></div>
+       <div class="item"><img src="samples/12.jpg"></div>
+       <div class="item"><img src="samples/13.jpg"></div>
+       <div class="item"><img src="samples/14.jpg"></div>
+       <div class="item"><img src="samples/15.jpg"></div>
+       <div class="item"><img src="samples/16.jpg"></div>
+        <div class="item"><img src="samples/17.jpg"></div>
+    </div>
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        var box = $(".box");
+        var boxHeight = box.outerHeight(); //전체 높이 알기 :
+        var itemHeight = box.find(".item").first().outerHeight();
+        var lightBox = $(".lightbox");
+
+        box.scroll(function (e) {
+            // //console.log("scroll..?" +  boxHeight);
+            //
+            // var lastItem = box.find(".item").last(); //마지막 div 가져오는 것
+            //
+            // var lastPos = parseInt(lastItem.offset().top) + parseInt(lastItem.outerHeight()); //end가 스크롤 시에 위로 올라오는 것이 숫자로 보임.
+            // console.log(lastPos);
+
+            var size = box.find(".item").length;
+            var scrollHeight = box.scrollTop();
+
+
+            if((boxHeight + scrollHeight) === (size * itemHeight)){
+                console.log("end..");
+                addMore();
+            }
+
+
+        });
+
+        function addMore() {
+
+            lightBox.show();
+            setTimeout(function () {
+                for(var i=0; i<10; i++){
+                    box.append("<li class='item'><img src=\"samples/02.jpg\"></li>")
+                }
+
+                lightBox.hide();
+            },1000);
+
+        }
+
+        //스크롤 내리면 마지막의 end와 포지션이 맞아야 함.
+        //end알아내기
+
+
+    });
+</script>
+
+</body>
+</html>

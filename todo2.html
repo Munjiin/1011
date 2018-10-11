@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<div>
+    <input type="text" id="input">
+    <button id="btn">ADD</button>
+</div>
+
+<div>
+    <ul class="todoUL"></ul>
+</div>
+<script src="todo.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script>
+
+    // console.log(todoList);
+    $(document).ready(function(){
+        var input = $("#input");        //입력창
+        var btn = $("#btn");            //add버튼
+        var todoUL = $(".todoUL");      //입력값이 add된 결과창
+        var currentPK;
+
+        //버튼 클릭 전
+        function refresh(){
+            todoList.getAll(function (arr) {
+                var str='';
+                $(arr).each(function (idx,todo) {
+                    str+="<li data-pk='"+todo.pk+"'>"+todo.title+"<button>x</button></li>";
+                });
+                todoUL.html(str);
+            });
+        }
+        refresh();
+
+        //수정.
+        //li를 클릭하는 것.
+
+        todoUL.on("click","li",function (e) {
+
+            var liObj = $(e.target);
+            console.log(liObj);
+
+            currentPK = liObj.attr("data-pk");
+            //이러면 버튼까지 다 가져옴 var title = liObj.html();
+            var title=e.target.childNodes[0].nodeValue;
+
+
+            console.log(title);
+
+            input.val(title); //인풋에 넣기.
+            btn.html("MOD")
+
+
+        });
+
+
+        //삭제
+        todoUL.on("click","li button",function (e) {//2번째는 실제 있는 이벤트
+
+            e.stopPropagation(); //수정 시
+
+            console.log("delete button");
+
+            //현재를 얘기할 때는 this..
+            var liObj = $(this).closest("li"); //closest 함수: 가장 가까운 것.
+           console.log(liObj);
+           var pkVaule = liObj.attr('data-pk'); //속성을 알아야 할때
+            console.log(pkVaule);
+            todoList.remove(pkVaule,function (result) {
+                alert("삭제 되었습니다.");
+                liObj.remove();
+            });
+        });
+
+        btn.on("click", function (e) {
+
+            var label = e.target.innerHTML;
+            if(label === 'ADD')
+            {
+                console.log("add clicked");
+                //내용이 비어있으면 skip하고 내용이 있으면 반영
+                var text = input.val();
+                if(text.length === 0) { return; }
+
+                //데이터 보내고, function. 이게 callback. "결과를 처리해줘어"
+                todoList.add(text, function(pk){
+                    //todoUL.append("<li data-pk='"+pk+"'>" + text + "</li>"); 좋지 않은 방법
+
+                    alert(pk+"번 글로 등록되었슴돠");
+                    refresh();
+                    input.val('');
+                });
+
+            }else if(label === 'MOD'){
+                var text = input.val();
+                var obj = {pk: currentPK, title:text};
+                todoList.modify(obj, function(result){
+                    //todoUL.append("<li data-pk='"+pk+"'>" + text + "</li>"); 좋지 않은 방법
+
+                    alert("수정되었슴다");
+                    refresh();
+                    input.val('');
+                });
+
+            }
+
+
+/*
+            console.log("add clicked");
+            //내용이 비어있으면 skip하고 내용이 있으면 반영
+            var text = input.val();
+            if(text.length === 0) { return; }
+
+            //데이터 보내고, function. 이게 callback. "결과를 처리해줘어"
+            todoList.add(text, function(pk){
+                //todoUL.append("<li data-pk='"+pk+"'>" + text + "</li>"); 좋지 않은 방법
+
+                alert(pk+"번 글로 등록되었슴돠");
+                refresh();
+                input.val('');
+            });
+*/
+        });
+
+    });
+
+</script>
+
+</body>
+</html>
+
