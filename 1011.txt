@@ -1,0 +1,436 @@
+프로젝트 명: 1011
+
+<todo.js>
+
+<todo2.html>
+
+1)스크립트
+
+<script src="todo.js"></script> <!--//즉시 실행 함수를 이용해서 전역변수가 하나 있음-->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+
+2)div
+
+
+<div>
+    <input type="text" id="input">
+    <button id="btn">ADD</button>
+</div>
+
+
+3) div의 변수 다 따로 ready에 받기 -> 이벤트 처리
+<script>
+    // console.log(todoList);
+    $(document).ready(function () {
+        var input = $("#input");
+        var btn = $("#btn");
+
+        btn.on("click", function (e) {
+            console.log("add btn click");
+            
+            var text = input.val();
+            if(text.length === 0){return;} //empty 내용이 비어있을땐 스킵킵
+            
+            todoList.add({title:text}); //안 비어 있으면 추가
+        })
+
+       
+    })
+
+</script>
+
+
+4) div 추가
+<div>
+    <ul class="todoUL"></ul>
+</div>
+
+
+5)스크립트 추가
+
+<script>
+    // console.log(todoList);
+    $(document).ready(function () {
+        var input = $("#input");
+        var btn = $("#btn");
+        var todoUL = $(".todoUL");
+
+        btn.on("click", function (e) {
+            console.log("add btn click");
+
+            var text = input.val();
+            if(text.length === 0){return;} //empty 내용이 비어있을땐 스킵킵
+
+            todoList.add({title:text},function () {
+                todoUL.append("<li>" + text + "</li>");
+                input.val('');
+            }); //안 비어 있으면 추가. 콜백. 비동기식은 무조건 함수.
+        });
+
+
+    });
+
+</script>
+
+6) todo.js 업뎃
+var todoList = (function () {
+
+    var arr = []; //배열
+    var pk=0;
+
+    //클로저
+    function add(obj, callback) {
+        obj['pk'] = pk++; //obj.pk와도 같은 것,,,(?)
+        arr.push(obj);
+        callback();
+    }
+
+    return{
+        add: add
+    } //외부에서 노출되는 건 add만.배열은 노ㅛ출되지 않음.
+
+})();
+
+7)pk용으로 스크립트 옵뎃
+
+8)서버 구축하기
+필터에 "/todo/*" 추가
+
+9)<todo.java>
+<todoService.java>
+<todoAdd.java>
+
+10) 서버 구축했으니.... todo.js
+var todoList = (function () {
+
+    // var arr = []; //배열
+    // var pk=0; //li에 넣을거임 . 각 li의 번호 필요
+
+    //클로저
+    function add(obj, callback) {
+        /*서버 구축 전
+        obj['pk'] = pk++; //obj.pk와도 같은 것,,,(?)
+        arr.push(obj);
+        callback(obj.pk);
+        */
+
+        $.post("http://10.10.10.96:8080/jsonEx/todo/add",{title:obj},function (data) {
+            console.log(data);
+            callback(data.pk);
+            
+            
+        },"json");
+    }
+
+    return{
+        add: add
+    } //외부에서 노출되는 건 add만.배열은 노ㅛ출되지 않음.
+
+})();
+
+11) 서버 담당자는 전체를 다시 보내줘야 함.
+<todoservice>
+
+static {
+		for(int i=0; i<10; i++) {
+			Todo todo =  new Todo();
+			todo.setTitle("하고싶은 일" +i);
+			todo.setPk(++sequence);
+			todoList.add(todo);
+			
+		}
+	}
+	
+	
+	public TodoService() {
+		
+	
+		
+		
+	}
+	
+	public List<Todo> getAll(){
+		return todoList;//전체 목록 반환
+	}
+
+<todoAll.html>
+package org.zerock.web;
+
+import java.io.IOException;
+
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.zerock.service.TodoService;
+
+import com.google.gson.Gson;
+
+/**
+ * Servlet implementation class TodoAll
+ */
+@WebServlet("/todo/all")
+public class TodoAll extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+	
+	private TodoService service
+    = new TodoService();
+	
+       
+    /**
+     * @see HttpServlet#HttpServlet()
+     */
+    public TodoAll() {
+        super();
+        // TODO Auto-generated constructor stub
+    }
+
+	/**
+	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
+	 */
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		
+		response.setContentType("application/json");
+		Gson gson = new Gson();
+		String str  = gson.toJson(service.getAll());
+		response.getWriter().print(str);
+		
+	}
+
+}
+
+===================목록 다시 받기
+
+12) 전체 목록 가져오기
+
+<todo.js>
+
+function getAll() { //전체 받기
+
+        $.getJSON("http://10.10.10.96:8080/jsonEx/todo/all",function (list) { //제이슨 데이터는 자바스크립에서는 자동으로 객체 변환 됨
+
+            console.log(list);
+
+13) todo2.html
+
+     //버튼 클릭 전
+        function refresh(){
+            todoList.getAll();
+        }
+        refresh();
+
+        btn.on("click", function (e) {
+            console.log("add clicked");
+            //내용이 비어있으면 skip하고 내용이 있으면 반영
+            var text = input.val();
+            if(text.length === 0) { return; }
+
+            //데이터 보내고, function. 이게 callback. "결과를 처리해줘어"
+            todoList.add(text, function(pk){
+                //todoUL.append("<li data-pk='"+pk+"'>" + text + "</li>"); 좋지 않은 방법
+
+                alert(pk+"번 글로 등록되었슴돠");
+                refresh();
+                input.val('');
+            });
+
+        });
+
+14)todo2.html 수정
+ //버튼 클릭 전
+        function refresh(){
+            todoList.getAll(function (arr) {
+                var str='';
+                $(arr).each(function (idx,todo) {
+                    str+="<li data-pk='"+todo.pk+"'>"+todo.title+"</li>";
+                });
+                todoUL.html(str);
+            });
+        }
+
+15) todo.js 수정
+function getAll(callback) { //전체 받기
+
+
+16) 삭제 기능
+<todo2>
+
+//삭제
+        todoUL.on("click","li button",function (e) {//2번째는 실제 있는 이벤트
+            console.log("delete button");
+
+            //현재를 얘기할 때는 this..
+            var liObj = $(this).closest("li"); //closest 함수: 가장 가까운 것.
+           console.log(liObj);
+           var pkVaule = liObj.attr('data-pk'); //속성을 알아야 할때
+            console.log(pkVaule);
+        });
+
+17)서버
+
+------------------
+18)<todo.js>
+ function remove(pk, callback) {
+         $.post("http://10.10.10.96:8080/jsonEx/todo/remove",{pk:pk},function (list) { //제이슨 데이터는 자바스크립에서는 자동으로 객체 변환 됨
+
+            console.log(list);
+            callback(data.result);
+    }
+19)삭제
+//삭제
+        todoUL.on("click","li button",function (e) {//2번째는 실제 있는 이벤트
+            console.log("delete button");
+
+            //현재를 얘기할 때는 this..
+            var liObj = $(this).closest("li"); //closest 함수: 가장 가까운 것.
+           console.log(liObj);
+           var pkVaule = liObj.attr('data-pk'); //속성을 알아야 할때
+            console.log(pkVaule);
+            todoList.remove(pkVaule,function (result) {
+                alert("삭제 되었습니다.");
+                liObj.remove();
+            });
+        });
+
+============서버
+20)todomodify
+
+날짜의 폴더에 선생님이 올려주심...!
+
+=====================================================================================================무한스크롤
+<scrollEx>
+
+
+ 
+1)div, style
+2) jquery 라이브러리 추가
+3)
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>무한 스크롤</title>
+</head>
+<body>
+
+<style>
+    *{
+        margin: 0px;
+        padding: 0px;
+    }
+
+    .container{
+        width:100%;
+        height:100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: lightpink;
+    }
+
+    .box{
+        width:50%;
+        height:500px;
+        background-color: #8dfffd;
+        overflow: auto;
+    }
+
+    .item{
+        height:50px;
+        box-sizing:border-box;
+        border:1px solid #cc376b;
+        /*margin-bottom: -1px; !*균일한 색상*!*/
+
+    }
+
+    ::-webkit-scrollbar {
+        width: 12px;
+    }
+
+    ::-webkit-scrollbar-track {
+        -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+        border-radius: 10px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+        border-radius: 10px;
+        -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5);
+    }
+
+
+
+
+</style>
+
+<div class="lightbox">
+
+</div>
+
+<div class="container">
+    <div class="box">
+       <div class="item">item</div>
+       <div class="item">item</div>
+       <div class="item">item</div>
+       <div class="item">item</div>
+       <div class="item">item</div>
+       <div class="item">item</div>
+       <div class="item">item</div>
+       <div class="item">item</div>
+       <div class="item">item</div>
+       <div class="item">item</div>
+       <div class="item">item</div>
+       <div class="item">end</div>
+    </div>
+</div>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+
+<script>
+    $(document).ready(function () {
+        var box = $(".box");
+        var boxHeight = box.outerHeight(); //전체 높이 알기 :
+        var itemHeight = box.find(".item").first().outerHeight();
+
+        box.scroll(function (e) {
+            // //console.log("scroll..?" +  boxHeight);
+            //
+            // var lastItem = box.find(".item").last(); //마지막 div 가져오는 것
+            //
+            // var lastPos = parseInt(lastItem.offset().top) + parseInt(lastItem.outerHeight()); //end가 스크롤 시에 위로 올라오는 것이 숫자로 보임.
+            // console.log(lastPos);
+
+            var size = box.find(".item").length;
+            var scrollHeight = box.scrollTop();
+
+
+            if((boxHeight + scrollHeight) === (size * itemHeight)){
+                console.log("end..");
+                addMore();
+            }
+
+
+        });
+
+        function addMore() {
+
+            setTimeout(function () {
+                for(var i=0; i<10; i++){
+                    box.append("<li class='item'>AAAA</li>")
+                }
+            },1000);
+
+        }
+
+        //스크롤 내리면 마지막의 end와 포지션이 맞아야 함.
+        //end알아내기
+
+
+    });
+</script>
+
+</body>
+</html>
+
+
+
